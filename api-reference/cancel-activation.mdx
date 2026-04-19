@@ -1,0 +1,170 @@
+---
+title: "Cancelar Ativação"
+description: "Cancela uma ativação pendente e estorna o saldo automaticamente."
+api: "POST /api/v1/activations/{id}/cancel"
+---
+
+## Endpoint
+
+```
+POST /api/v1/activations/{id}/cancel
+```
+
+## Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token no formato `Bearer sk_sms_...`
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  O `activationId` retornado ao criar a ativação via `POST /api/v1/activations`.
+</ParamField>
+
+## Regras de Cancelamento
+
+<Warning>
+  **Não é possível cancelar após o código SMS ser recebido.** Uma vez que o `smsCode` é preenchido, o valor já foi processado pela operadora e não pode ser estornado.
+</Warning>
+
+| Situação | Pode cancelar? | Estorno? |
+|----------|----------------|----------|
+| Status `waiting` | ✅ Sim | ✅ Sim |
+| Status `active` sem código | ✅ Sim | ✅ Sim |
+| Status `active` com código recebido | ❌ Não | ❌ Não |
+| Status `expired` | ❌ Não (já expirou) | ✅ Automático |
+| Status `cancelled` | ❌ Não (já cancelado) | — |
+
+## Resposta
+
+<ResponseField name="ok" type="boolean">
+  `true` em caso de sucesso.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="cancelled" type="boolean">
+      `true` se o cancelamento foi processado.
+    </ResponseField>
+    <ResponseField name="refunded" type="boolean">
+      `true` se o saldo foi estornado.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+
+r = requests.post(
+    "https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
+    headers=headers
+)
+print(r.json())
+```
+
+```python Python (padrão seguro)
+import requests, time
+
+headers = {
+    "Authorization": "Bearer sk_sms_SeuToken",
+    "Content-Type": "application/json"
+}
+base = "https://SEU-PROJETO.convex.site"
+
+def activate_and_wait(service_id, country, timeout=120):
+    """
+    Tenta receber o código. Se não chegar dentro do timeout,
+    cancela automaticamente para evitar perder saldo.
+    """
+    # 1. Comprar número
+    act = requests.post(f"{base}/api/v1/activations", headers=headers,
+                        json={"serviceId": service_id, "country": country}).json()["data"]
+    activation_id = act["activationId"]
+    
+    deadline = time.time() + timeout
+    
+    try:
+        while time.time() < deadline:
+            s = requests.get(f"{base}/api/v1/activations/{activation_id}",
+                             headers=headers).json()["data"]
+            if s["smsCode"]:
+                return s["smsCode"]
+            if s["status"] in ["expired", "cancelled"]:
+                return None
+            time.sleep(5)
+    finally:
+        # Cancelar se ainda não tiver código (segurança)
+        s = requests.get(f"{base}/api/v1/activations/{activation_id}",
+                         headers=headers).json()["data"]
+        if s["status"] == "waiting" or (s["status"] == "active" and not s["smsCode"]):
+            requests.post(f"{base}/api/v1/activations/{activation_id}/cancel", headers=headers)
+    
+    return None
+
+code = activate_and_wait("jx7m2k9p4n8q", 73, timeout=120)
+print(f"Código: {code}" if code else "Não recebeu, cancelado com estorno")
+```
+
+```javascript Node.js
+const res = await fetch(
+  "https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
+  {
+    method: "POST",
+    headers: { "Authorization": "Bearer sk_sms_SeuToken" }
+  }
+);
+const data = await res.json();
+console.log(data);
+```
+</RequestExample>
+
+<ResponseExample>
+```json Sucesso (200)
+{
+  "ok": true,
+  "data": {
+    "cancelled": true,
+    "refunded": true
+  }
+}
+```
+
+```json Erro — SMS já recebido (409)
+{
+  "ok": false,
+  "error": {
+    "code": "CANNOT_CANCEL",
+    "message": "Não é possível cancelar. O SMS já foi recebido."
+  }
+}
+```
+
+```json Erro — Ativação já encerrada (409)
+{
+  "ok": false,
+  "error": {
+    "code": "ALREADY_FINISHED",
+    "message": "A ativação já está com status \"expired\"."
+  }
+}
+```
+
+```json Erro — Não encontrada (404)
+{
+  "ok": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Ativação não encontrada ou não pertence a este usuário."
+  }
+}
+```
+</ResponseExample>

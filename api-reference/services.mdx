@@ -1,0 +1,140 @@
+---
+title: "Listar Serviços"
+description: "Retorna todos os serviços disponíveis para verificação via SMS, com preços em BRL."
+api: "GET /api/v1/services"
+---
+
+## Endpoint
+
+```
+GET /api/v1/services
+```
+
+## Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token no formato `Bearer sk_sms_...`
+</ParamField>
+
+## Resposta
+
+<ResponseField name="ok" type="boolean">
+  `true` em caso de sucesso.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Lista de serviços disponíveis.
+  <Expandable title="Cada item do array">
+    <ResponseField name="id" type="string">
+      Identificador único do serviço. Use este valor no campo `serviceId` ao criar uma ativação.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Nome legível do serviço. Ex: `"WhatsApp"`, `"Telegram"`.
+    </ResponseField>
+    <ResponseField name="domain" type="string">
+      Domínio associado ao serviço. Ex: `"whatsapp.com"`.
+    </ResponseField>
+    <ResponseField name="priceBrl" type="number">
+      Preço em Reais (BRL) para adquirir um número para este serviço. O preço é dinâmico e pode variar conforme disponibilidade e câmbio.
+    </ResponseField>
+    <ResponseField name="category" type="string">
+      Categoria do serviço (ex: `"social"`, `"finance"`, `"delivery"`).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  Os `id`s dos serviços são estáveis — você pode fazer cache desta lista por até 1 hora com segurança.
+</Note>
+
+## Países Disponíveis
+
+O campo `country` nas ativações aceita o ID numérico do país conforme a operadora Hero-SMS. Os mais usados:
+
+| País | ID |
+|------|----|
+| Brasil | `73` |
+| Estados Unidos | `187` |
+| Rússia | `0` |
+| Indonésia | `6` |
+| Índia | `22` |
+| Reino Unido | `16` |
+| Alemanha | `43` |
+
+<RequestExample>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/services \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+r = requests.get("https://SEU-PROJETO.convex.site/api/v1/services", headers=headers)
+
+services = r.json()["data"]
+# Filtrar por nome
+whatsapp = next(s for s in services if s["name"] == "WhatsApp")
+print(f"WhatsApp ID: {whatsapp['id']}, Preço: R$ {whatsapp['priceBrl']:.2f}")
+```
+
+```javascript Node.js
+const res = await fetch("https://SEU-PROJETO.convex.site/api/v1/services", {
+  headers: { "Authorization": "Bearer sk_sms_SeuToken" }
+});
+const { data: services } = await res.json();
+
+// Encontrar WhatsApp
+const whatsapp = services.find(s => s.name === "WhatsApp");
+console.log(`WhatsApp: R$ ${whatsapp.priceBrl} (id: ${whatsapp.id})`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json Sucesso (200)
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "jx7m2k9p4n8q",
+      "name": "WhatsApp",
+      "domain": "whatsapp.com",
+      "priceBrl": 2.50,
+      "category": "social"
+    },
+    {
+      "id": "ab3c1d5e7f9g",
+      "name": "Telegram",
+      "domain": "telegram.org",
+      "priceBrl": 1.50,
+      "category": "social"
+    },
+    {
+      "id": "mn4o5p6q7r8s",
+      "name": "Instagram",
+      "domain": "instagram.com",
+      "priceBrl": 3.00,
+      "category": "social"
+    },
+    {
+      "id": "tu9v0w1x2y3z",
+      "name": "Google",
+      "domain": "google.com",
+      "priceBrl": 2.00,
+      "category": "tech"
+    }
+  ]
+}
+```
+
+```json Erro — Rate limit (429)
+{
+  "ok": false,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Muitas requisições. Limite: 60/min."
+  }
+}
+```
+</ResponseExample>

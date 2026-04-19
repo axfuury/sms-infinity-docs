@@ -1,0 +1,119 @@
+---
+title: "Autenticação"
+description: "Como gerar e usar seu token de API para autenticar todas as requisições."
+---
+
+## Visão Geral
+
+A API do SMS Infinity usa **Bearer Tokens** para autenticação. Todo request deve incluir seu token no header `Authorization`.
+
+```http
+Authorization: Bearer sk_sms_SeuTokenAqui
+```
+
+## Formato do Token
+
+Os tokens seguem o formato:
+
+```
+sk_sms_<32 bytes aleatórios em base64url>
+```
+
+**Exemplo:**
+```
+sk_sms_aB3xZqRT8mN2pL7wK1dY5vF0cE9sU4jH
+```
+
+## Como Gerar seu Token
+
+<Steps>
+  <Step title="Solicite o acesso">
+    Entre em contato com nossa equipe. O acesso à API é liberado individualmente para cada conta.
+  </Step>
+  <Step title="Acesse a seção de API no Painel">
+    Após aprovação, um novo card **"Acesso via API"** aparecerá na sua página inicial do painel.
+  </Step>
+  <Step title="Gere o token">
+    Clique em **"Gerar Token"**. O token será exibido **uma única vez** — copie-o imediatamente.
+
+    <Warning>
+      Por razões de segurança, o token nunca é armazenado em texto puro em nossos servidores — apenas um hash SHA-256 é salvo. Se você perder o token, será necessário gerar um novo (o anterior será revogado automaticamente).
+    </Warning>
+  </Step>
+  <Step title="Armazene com segurança">
+    Adicione o token como variável de ambiente no seu sistema:
+    ```bash
+    SMS_INFINITY_API_KEY=sk_sms_SeuTokenAqui
+    ```
+  </Step>
+</Steps>
+
+## Usando o Token em Requisições
+
+<CodeGroup>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/balance \
+  -H "Authorization: Bearer sk_sms_SeuTokenAqui"
+```
+
+```python Python
+import requests
+
+API_KEY = "sk_sms_SeuTokenAqui"
+BASE_URL = "https://SEU-PROJETO.convex.site"
+
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+response = requests.get(f"{BASE_URL}/api/v1/balance", headers=headers)
+print(response.json())
+```
+
+```javascript Node.js
+const API_KEY = "sk_sms_SeuTokenAqui";
+const BASE_URL = "https://SEU-PROJETO.convex.site";
+
+const headers = {
+  "Authorization": `Bearer ${API_KEY}`,
+  "Content-Type": "application/json"
+};
+
+const res = await fetch(`${BASE_URL}/api/v1/balance`, { headers });
+const data = await res.json();
+console.log(data);
+```
+
+```php PHP
+<?php
+$apiKey = "sk_sms_SeuTokenAqui";
+$baseUrl = "https://SEU-PROJETO.convex.site";
+
+$ch = curl_init("$baseUrl/api/v1/balance");
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $apiKey"]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = json_decode(curl_exec($ch), true);
+curl_close($ch);
+
+print_r($response);
+```
+</CodeGroup>
+
+## Revogar um Token
+
+Você pode revogar seu token a qualquer momento acessando o Painel → seção API → botão **"Revogar"**. O token anterior é imediatamente invalidado, mesmo que já esteja em uso.
+
+<Note>
+  O acesso à API também pode ser revogado pelo administrador da plataforma. Se suas requisições começarem a retornar `401 Unauthorized`, verifique o status do seu acesso no painel.
+</Note>
+
+## Segurança
+
+| Prática | Detalhe |
+|---------|---------|
+| Transmissão | HTTPS obrigatório em todas as requisições |
+| Armazenamento | Use variáveis de ambiente, nunca hardcode no código |
+| Rotação | Regenere o token periodicamente ou sempre que suspeitar de comprometimento |
+| Escopo | Tokens atuam apenas como o usuário que os gerou — sem elevação de privilégio |

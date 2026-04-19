@@ -1,0 +1,79 @@
+---
+title: "Consultar Saldo"
+description: "Retorna o saldo disponível na sua conta SMS Infinity."
+api: "GET /api/v1/balance"
+---
+
+## Endpoint
+
+```
+GET /api/v1/balance
+```
+
+## Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token no formato `Bearer sk_sms_...`
+</ParamField>
+
+## Resposta
+
+<ResponseField name="ok" type="boolean">
+  `true` em caso de sucesso.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="balance" type="number">
+      Saldo disponível em Reais (BRL), com 2 casas decimais.
+    </ResponseField>
+    <ResponseField name="currency" type="string">
+      Sempre `"BRL"`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/balance \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+r = requests.get("https://SEU-PROJETO.convex.site/api/v1/balance", headers=headers)
+print(r.json())
+```
+
+```javascript Node.js
+const res = await fetch("https://SEU-PROJETO.convex.site/api/v1/balance", {
+  headers: { "Authorization": "Bearer sk_sms_SeuToken" }
+});
+const data = await res.json();
+console.log(data);
+```
+</RequestExample>
+
+<ResponseExample>
+```json Sucesso (200)
+{
+  "ok": true,
+  "data": {
+    "balance": 25.50,
+    "currency": "BRL"
+  }
+}
+```
+
+```json Erro — Token inválido (401)
+{
+  "ok": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Token inválido ou expirado."
+  }
+}
+```
+</ResponseExample>

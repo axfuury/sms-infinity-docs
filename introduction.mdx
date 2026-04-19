@@ -1,0 +1,97 @@
+---
+title: "Bem-vindo à API do SMS Infinity"
+description: "Integre números virtuais de SMS diretamente ao seu sistema com a API do SMS Infinity."
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="SMS Infinity API"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="SMS Infinity API"
+/>
+
+## O que você pode fazer com a API?
+
+A API do SMS Infinity permite que você automatize todo o fluxo de aquisição de números virtuais e recebimento de SMS de forma programática — sem precisar acessar o painel manualmente.
+
+<CardGroup cols={2}>
+  <Card
+    title="Comprar Números Virtuais"
+    icon="phone"
+    href="/api-reference/create-activation"
+  >
+    Adquira números de qualquer país para verificação em dezenas de serviços (WhatsApp, Telegram, Instagram e mais).
+  </Card>
+  <Card
+    title="Receber Códigos SMS"
+    icon="message-sms"
+    href="/api-reference/get-activation"
+  >
+    Consulte o status da ativação e capture o código SMS em tempo real via polling ou integração direta.
+  </Card>
+  <Card
+    title="Cancelar com Estorno"
+    icon="rotate-left"
+    href="/api-reference/cancel-activation"
+  >
+    Cancele ativações pendentes e receba o saldo de volta automaticamente.
+  </Card>
+  <Card
+    title="Consultar Saldo"
+    icon="wallet"
+    href="/api-reference/balance"
+  >
+    Verifique seu saldo em tempo real para gerenciar créditos programaticamente.
+  </Card>
+</CardGroup>
+
+## Base URL
+
+Todas as chamadas de API devem ser feitas para o endpoint da plataforma:
+
+```
+https://SEU-PROJETO.convex.site
+```
+
+<Note>
+  Substitua `SEU-PROJETO` pela URL do Convex Site do SMS Infinity. Você pode encontrar essa URL na seção **API** do seu painel.
+</Note>
+
+## Formato das Respostas
+
+Todas as respostas seguem o mesmo envelope JSON:
+
+<CodeGroup>
+```json Sucesso
+{
+  "ok": true,
+  "data": { ... }
+}
+```
+
+```json Erro
+{
+  "ok": false,
+  "error": {
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Saldo insuficiente. Seu saldo atual é R$ 0,50 mas o número custa R$ 1,50."
+  }
+}
+```
+</CodeGroup>
+
+## Acesso à API
+
+O acesso à API é **restrito e controlado**. Para utilizá-la:
+
+1. Entre em contato com nossa equipe solicitando acesso.
+2. Após aprovação, acesse o **Painel → seção API** e gere seu token.
+3. O token é exibido **uma única vez** — guarde-o em local seguro.
+
+<Warning>
+  A API debita seu saldo interno do SMS Infinity a cada compra. Certifique-se de ter créditos carregados antes de realizar ativações programáticas.
+</Warning>

@@ -1,0 +1,101 @@
+---
+title: "Rate Limits"
+description: "Limites de requisição por token e como lidar com o status 429."
+---
+
+## Limites Atuais
+
+| Escopo | Limite |
+|--------|--------|
+| Requisições por minuto | **60 req/min** por token |
+| Janela de medição | 60 segundos (deslizante) |
+| Aplicação | Por token (não por IP) |
+
+## Como Funciona
+
+O rate limit é aplicado por token de API. A janela de 60 segundos reinicia automaticamente após expirar — não é uma janela fixa de relógio.
+
+```
+Requisição 1-60  → ✅ 200 OK
+Requisição 61    → ❌ 429 Too Many Requests
+... aguardar janela reiniciar ...
+Requisição 62    → ✅ 200 OK
+```
+
+## Resposta de Erro
+
+Quando o limite é atingido, você receberá:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+```
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Muitas requisições. Limite: 60/min."
+  }
+}
+```
+
+## Boas Práticas
+
+<AccordionGroup>
+  <Accordion title="Use polling com intervalo adequado">
+    Para verificar o status de ativações, recomendamos intervalo mínimo de **5 segundos** entre cada consulta. Para 1 ativação simultânea, você nunca vai atingir o limite.
+    
+    ```python
+    import time
+    
+    while True:
+        status = check_activation(activation_id)
+        if status["smsCode"]:
+            break
+        time.sleep(5)  # ✅ 5s de intervalo
+    ```
+  </Accordion>
+
+  <Accordion title="Implemente exponential backoff">
+    Se receber um 429, espere antes de tentar novamente:
+
+    ```python
+    import time, random
+    
+    def api_call_with_retry(fn, max_retries=3):
+        for attempt in range(max_retries):
+            try:
+                return fn()
+            except RateLimitError:
+                wait = (2 ** attempt) + random.random()
+                time.sleep(wait)
+        raise Exception("Max retries exceeded")
+    ```
+  </Accordion>
+
+  <Accordion title="Cache a lista de serviços">
+    O endpoint `/api/v1/services` retorna dados que raramente mudam. Faça cache local por pelo menos 1 hora:
+
+    ```python
+    from functools import lru_cache
+    import time
+    
+    _services_cache = None
+    _cache_time = 0
+    
+    def get_services():
+        global _services_cache, _cache_time
+        if time.time() - _cache_time < 3600:  # 1h cache
+            return _services_cache
+        _services_cache = api("GET", "/api/v1/services")["data"]
+        _cache_time = time.time()
+        return _services_cache
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Limites Futuros
+
+Planejamos oferecer limites maiores para usuários com alta demanda. Entre em contato se precisar de mais de 60 req/min.

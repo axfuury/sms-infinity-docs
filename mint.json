@@ -1,0 +1,71 @@
+{
+  "name": "SMS Infinity",
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png",
+    "href": "https://smsinfinity.pro"
+  },
+  "favicon": "/favicon.ico",
+  "colors": {
+    "primary": "#0EA5E9",
+    "light": "#38BDF8",
+    "dark": "#0284C7",
+    "anchors": {
+      "from": "#0EA5E9",
+      "to": "#6366F1"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Plataforma",
+      "url": "https://smsinfinity.pro"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Acessar Painel",
+    "url": "https://smsinfinity.pro"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Suporte",
+      "icon": "life-ring",
+      "url": "https://smsinfinity.pro"
+    },
+    {
+      "name": "Status",
+      "icon": "signal",
+      "url": "https://smsinfinity.pro"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Primeiros Passos",
+      "pages": [
+        "introduction",
+        "guides/authentication",
+        "guides/quickstart",
+        "guides/rate-limits",
+        "guides/errors"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/balance",
+        "api-reference/services",
+        "api-reference/create-activation",
+        "api-reference/get-activation",
+        "api-reference/cancel-activation"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://smsinfinity.pro"
+  }
+}

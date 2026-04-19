@@ -1,0 +1,310 @@
+---
+title: "Quickstart — 5 Minutos"
+description: "Do zero a uma ativação completa usando a API do SMS Infinity."
+---
+
+## Pré-requisitos
+
+- Conta no SMS Infinity com acesso à API habilitado
+- Saldo carregado na sua conta
+- Token de API gerado ([veja como](/guides/authentication))
+
+## Passo 1 — Verificar Saldo
+
+Antes de tudo, confirme que você tem saldo suficiente:
+
+<CodeGroup>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/balance \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+r = requests.get("https://SEU-PROJETO.convex.site/api/v1/balance", headers=headers)
+print(r.json())
+```
+</CodeGroup>
+
+**Resposta:**
+```json
+{
+  "ok": true,
+  "data": {
+    "balance": 25.50,
+    "currency": "BRL"
+  }
+}
+```
+
+## Passo 2 — Listar Serviços Disponíveis
+
+Descubra o `id` do serviço que você precisa (ex: WhatsApp):
+
+```bash
+curl https://SEU-PROJETO.convex.site/api/v1/services \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+**Resposta (exemplo parcial):**
+```json
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "jx7m2k9p4n8q",
+      "name": "WhatsApp",
+      "domain": "whatsapp.com",
+      "priceBrl": 2.50
+    },
+    {
+      "id": "ab3c1d5e7f9g",
+      "name": "Telegram",
+      "domain": "telegram.org",
+      "priceBrl": 1.50
+    }
+  ]
+}
+```
+
+<Tip>
+  Salve os IDs dos serviços que você usa frequentemente. Eles são estáveis e não mudam.
+</Tip>
+
+## Passo 3 — Comprar um Número
+
+Use o `id` do serviço e o código do país (ex: `73` = Brasil):
+
+```bash
+curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations \
+  -H "Authorization: Bearer sk_sms_SeuToken" \
+  -H "Content-Type: application/json" \
+  -d '{"serviceId": "jx7m2k9p4n8q", "country": 73}'
+```
+
+**Resposta:**
+```json
+{
+  "ok": true,
+  "data": {
+    "activationId": "k4p8n2m7q1x3",
+    "providerActivationId": "94827361",
+    "phoneNumber": "+5511987654321",
+    "cost": 2.50,
+    "currency": "BRL"
+  }
+}
+```
+
+Guarde o `activationId` — você vai precisar para os próximos passos.
+
+## Passo 4 — Aguardar o Código SMS
+
+Faça polling no endpoint de status a cada 5 segundos:
+
+<CodeGroup>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python (com polling)
+import requests, time
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+base = "https://SEU-PROJETO.convex.site"
+activation_id = "k4p8n2m7q1x3"
+
+for _ in range(40):  # Tenta por ~3 minutos
+    r = requests.get(f"{base}/api/v1/activations/{activation_id}", headers=headers)
+    data = r.json()["data"]
+    
+    if data["status"] == "active" and data["smsCode"]:
+        print(f"✅ Código recebido: {data['smsCode']}")
+        break
+    elif data["status"] in ["expired", "cancelled"]:
+        print(f"❌ Ativação encerrada: {data['status']}")
+        break
+    
+    print(f"⏳ Aguardando... status: {data['status']}")
+    time.sleep(5)
+```
+
+```javascript Node.js (com polling)
+const headers = { "Authorization": "Bearer sk_sms_SeuToken" };
+const base = "https://SEU-PROJETO.convex.site";
+const activationId = "k4p8n2m7q1x3";
+
+for (let i = 0; i < 40; i++) {
+  const res = await fetch(`${base}/api/v1/activations/${activationId}`, { headers });
+  const { data } = await res.json();
+  
+  if (data.status === "active" && data.smsCode) {
+    console.log(`✅ Código recebido: ${data.smsCode}`);
+    break;
+  } else if (["expired", "cancelled"].includes(data.status)) {
+    console.log(`❌ Ativação encerrada: ${data.status}`);
+    break;
+  }
+  
+  console.log(`⏳ Aguardando... status: ${data.status}`);
+  await new Promise(r => setTimeout(r, 5000));
+}
+```
+</CodeGroup>
+
+**Resposta (código ainda não chegou):**
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "k4p8n2m7q1x3",
+    "status": "waiting",
+    "phoneNumber": "+5511987654321",
+    "smsCode": null,
+    "service": "WhatsApp",
+    "cost": 2.50,
+    "currency": "BRL",
+    "createdAt": 1713481200000
+  }
+}
+```
+
+**Resposta (código recebido ✅):**
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "k4p8n2m7q1x3",
+    "status": "active",
+    "phoneNumber": "+5511987654321",
+    "smsCode": "483920",
+    "service": "WhatsApp",
+    "cost": 2.50,
+    "currency": "BRL",
+    "createdAt": 1713481200000
+  }
+}
+```
+
+## Passo 5 (opcional) — Cancelar se não precisar
+
+Se você não precisar mais do número **antes** do SMS chegar, cancele para receber o estorno:
+
+```bash
+curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+**Resposta:**
+```json
+{
+  "ok": true,
+  "data": {
+    "cancelled": true,
+    "refunded": true
+  }
+}
+```
+
+<Warning>
+  **Não é possível cancelar após o código SMS ser recebido.** O valor já foi processado pela operadora.
+</Warning>
+
+## Exemplo Completo
+
+<CodeGroup>
+```python Python (fluxo completo)
+import requests, time
+
+API_KEY = "sk_sms_SeuToken"
+BASE_URL = "https://SEU-PROJETO.convex.site"
+
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
+
+def api(method, path, **kwargs):
+    r = requests.request(method, f"{BASE_URL}{path}", headers=headers, **kwargs)
+    return r.json()
+
+# 1. Verificar saldo
+saldo = api("GET", "/api/v1/balance")
+print(f"Saldo: R$ {saldo['data']['balance']:.2f}")
+
+# 2. Comprar número (WhatsApp, Brasil)
+activation = api("POST", "/api/v1/activations", json={
+    "serviceId": "jx7m2k9p4n8q",  # ID do WhatsApp
+    "country": 73                   # Brasil
+})
+activation_id = activation["data"]["activationId"]
+phone = activation["data"]["phoneNumber"]
+print(f"Número adquirido: {phone}")
+
+# 3. Aguardar código
+code = None
+for _ in range(40):
+    status = api("GET", f"/api/v1/activations/{activation_id}")
+    d = status["data"]
+    if d["smsCode"]:
+        code = d["smsCode"]
+        break
+    if d["status"] in ["expired", "cancelled"]:
+        break
+    time.sleep(5)
+
+if code:
+    print(f"✅ Código: {code}")
+else:
+    print("❌ Código não chegou — cancelando")
+    api("POST", f"/api/v1/activations/{activation_id}/cancel")
+```
+
+```javascript Node.js (fluxo completo)
+const API_KEY = "sk_sms_SeuToken";
+const BASE_URL = "https://SEU-PROJETO.convex.site";
+
+const headers = {
+  "Authorization": `Bearer ${API_KEY}`,
+  "Content-Type": "application/json"
+};
+
+const api = async (method, path, body) => {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method, headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+};
+
+// 1. Verificar saldo
+const { data: bal } = await api("GET", "/api/v1/balance");
+console.log(`Saldo: R$ ${bal.balance.toFixed(2)}`);
+
+// 2. Comprar número (WhatsApp, Brasil)
+const { data: act } = await api("POST", "/api/v1/activations", {
+  serviceId: "jx7m2k9p4n8q",
+  country: 73
+});
+console.log(`Número: ${act.phoneNumber}`);
+
+// 3. Polling
+let code = null;
+for (let i = 0; i < 40; i++) {
+  const { data: s } = await api("GET", `/api/v1/activations/${act.activationId}`);
+  if (s.smsCode) { code = s.smsCode; break; }
+  if (["expired", "cancelled"].includes(s.status)) break;
+  await new Promise(r => setTimeout(r, 5000));
+}
+
+if (code) {
+  console.log(`✅ Código: ${code}`);
+} else {
+  console.log("❌ Cancelando...");
+  await api("POST", `/api/v1/activations/${act.activationId}/cancel`);
+}
+```
+</CodeGroup>

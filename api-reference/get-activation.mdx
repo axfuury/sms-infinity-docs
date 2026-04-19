@@ -1,0 +1,203 @@
+---
+title: "Consultar Status / Código SMS"
+description: "Verifica o status atual de uma ativação e retorna o código SMS quando disponível."
+api: "GET /api/v1/activations/{id}"
+---
+
+## Endpoint
+
+```
+GET /api/v1/activations/{id}
+```
+
+## Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token no formato `Bearer sk_sms_...`
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  O `activationId` retornado ao criar a ativação via `POST /api/v1/activations`.
+</ParamField>
+
+## Status Possíveis
+
+| Status | Descrição |
+|--------|-----------|
+| `waiting` | Número adquirido, aguardando SMS |
+| `active` | SMS recebido (campo `smsCode` preenchido) |
+| `expired` | Expirou após 20 minutos — saldo estornado automaticamente |
+| `cancelled` | Cancelado pelo usuário — saldo estornado |
+
+## Estratégia de Polling
+
+Recomendamos polling a cada **5 segundos**. A ativação expira em **20 minutos** sem recebimento.
+
+```
+Intervalo recomendado:  5 segundos
+Tempo máximo de espera: 20 minutos (1200 segundos)
+Número máximo de polls: ~240
+```
+
+## Resposta
+
+<ResponseField name="ok" type="boolean">
+  `true` em caso de sucesso.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="id" type="string">
+      ID interno da ativação.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Status atual: `waiting`, `active`, `expired` ou `cancelled`.
+    </ResponseField>
+    <ResponseField name="phoneNumber" type="string">
+      Número de telefone associado à ativação.
+    </ResponseField>
+    <ResponseField name="smsCode" type="string | null">
+      Código SMS recebido. `null` enquanto aguardando. Pode ser apenas o código numérico (ex: `"483920"`) ou o texto completo dependendo da operadora.
+    </ResponseField>
+    <ResponseField name="service" type="string | null">
+      Nome do serviço (ex: `"WhatsApp"`).
+    </ResponseField>
+    <ResponseField name="cost" type="number | null">
+      Custo em BRL debitado.
+    </ResponseField>
+    <ResponseField name="currency" type="string">
+      Sempre `"BRL"`.
+    </ResponseField>
+    <ResponseField name="createdAt" type="number">
+      Timestamp Unix (ms) de criação da ativação.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
+  -H "Authorization: Bearer sk_sms_SeuToken"
+```
+
+```python Python (polling completo)
+import requests, time
+
+headers = {"Authorization": "Bearer sk_sms_SeuToken"}
+BASE_URL = "https://SEU-PROJETO.convex.site"
+
+def wait_for_code(activation_id, timeout_seconds=1200):
+    """Aguarda o código SMS com polling de 5s."""
+    deadline = time.time() + timeout_seconds
+    
+    while time.time() < deadline:
+        r = requests.get(
+            f"{BASE_URL}/api/v1/activations/{activation_id}",
+            headers=headers
+        )
+        data = r.json()["data"]
+        
+        if data["smsCode"]:
+            return data["smsCode"]
+        
+        if data["status"] in ["expired", "cancelled"]:
+            raise Exception(f"Ativação encerrada: {data['status']}")
+        
+        time.sleep(5)
+    
+    raise TimeoutError("Tempo limite esgotado aguardando o código")
+
+# Uso
+code = wait_for_code("k4p8n2m7q1x3")
+print(f"Código: {code}")
+```
+
+```javascript Node.js (polling completo)
+async function waitForCode(activationId, timeoutMs = 1200000) {
+  const headers = { "Authorization": "Bearer sk_sms_SeuToken" };
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const res = await fetch(
+      `https://SEU-PROJETO.convex.site/api/v1/activations/${activationId}`,
+      { headers }
+    );
+    const { data } = await res.json();
+
+    if (data.smsCode) return data.smsCode;
+    if (["expired", "cancelled"].includes(data.status)) {
+      throw new Error(`Ativação encerrada: ${data.status}`);
+    }
+
+    await new Promise(r => setTimeout(r, 5000));
+  }
+
+  throw new Error("Timeout aguardando o código SMS");
+}
+
+const code = await waitForCode("k4p8n2m7q1x3");
+console.log(`Código: ${code}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json Aguardando SMS (200)
+{
+  "ok": true,
+  "data": {
+    "id": "k4p8n2m7q1x3",
+    "status": "waiting",
+    "phoneNumber": "+5511987654321",
+    "smsCode": null,
+    "service": "WhatsApp",
+    "cost": 2.50,
+    "currency": "BRL",
+    "createdAt": 1713481200000
+  }
+}
+```
+
+```json SMS Recebido ✅ (200)
+{
+  "ok": true,
+  "data": {
+    "id": "k4p8n2m7q1x3",
+    "status": "active",
+    "phoneNumber": "+5511987654321",
+    "smsCode": "483920",
+    "service": "WhatsApp",
+    "cost": 2.50,
+    "currency": "BRL",
+    "createdAt": 1713481200000
+  }
+}
+```
+
+```json Expirada (200)
+{
+  "ok": true,
+  "data": {
+    "id": "k4p8n2m7q1x3",
+    "status": "expired",
+    "phoneNumber": "+5511987654321",
+    "smsCode": null,
+    "service": "WhatsApp",
+    "cost": 2.50,
+    "currency": "BRL",
+    "createdAt": 1713481200000
+  }
+}
+```
+
+```json Erro — Não encontrada (404)
+{
+  "ok": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Ativação não encontrada ou não pertence a este usuário."
+  }
+}
+```
+</ResponseExample>

@@ -1,0 +1,200 @@
+---
+title: "Comprar Número Virtual"
+description: "Adquire um número virtual para receber o código SMS de verificação de um serviço."
+api: "POST /api/v1/activations"
+---
+
+## Endpoint
+
+```
+POST /api/v1/activations
+```
+
+## Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token no formato `Bearer sk_sms_...`
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Deve ser `application/json`.
+</ParamField>
+
+## Body
+
+<ParamField body="serviceId" type="string" required>
+  ID do serviço para o qual você quer um número. Obtenha via [`GET /api/v1/services`](/api-reference/services).
+</ParamField>
+
+<ParamField body="country" type="number" required>
+  ID numérico do país da operadora. Veja a tabela de países em [Listar Serviços](/api-reference/services#países-disponíveis).
+  
+  Países mais usados: Brasil = `73`, EUA = `187`, Rússia = `0`.
+</ParamField>
+
+<ParamField body="code" type="string">
+  *(Opcional)* Código de variante específica da operadora. Deixe em branco para seleção automática do número mais barato disponível.
+</ParamField>
+
+## Como Funciona
+
+1. O sistema verifica os preços em tempo real na operadora
+2. O valor é debitado do seu saldo interno imediatamente
+3. Um número de telefone é reservado exclusivamente para você
+4. Você tem **até 20 minutos** para receber o SMS antes de expirar
+
+<Warning>
+  Se a operadora não tiver números disponíveis, você receberá um erro `NO_NUMBERS_AVAILABLE` e **nenhum saldo será debitado**.
+</Warning>
+
+## Resposta
+
+<ResponseField name="ok" type="boolean">
+  `true` em caso de sucesso.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="activationId" type="string">
+      **ID interno da ativação** (use este para consultar status e cancelar).
+    </ResponseField>
+    <ResponseField name="providerActivationId" type="string">
+      ID da ativação na operadora. Apenas para referência.
+    </ResponseField>
+    <ResponseField name="phoneNumber" type="string">
+      Número de telefone no formato internacional com `+`. Ex: `"+5511987654321"`.
+    </ResponseField>
+    <ResponseField name="cost" type="number">
+      Valor exato debitado do seu saldo em BRL.
+    </ResponseField>
+    <ResponseField name="currency" type="string">
+      Sempre `"BRL"`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations \
+  -H "Authorization: Bearer sk_sms_SeuToken" \
+  -H "Content-Type: application/json" \
+  -d '{"serviceId": "jx7m2k9p4n8q", "country": 73}'
+```
+
+```python Python
+import requests
+
+headers = {
+    "Authorization": "Bearer sk_sms_SeuToken",
+    "Content-Type": "application/json"
+}
+
+r = requests.post(
+    "https://SEU-PROJETO.convex.site/api/v1/activations",
+    headers=headers,
+    json={
+        "serviceId": "jx7m2k9p4n8q",  # WhatsApp
+        "country": 73                   # Brasil
+    }
+)
+
+data = r.json()["data"]
+print(f"Número: {data['phoneNumber']}")
+print(f"Custo: R$ {data['cost']:.2f}")
+print(f"ID para polling: {data['activationId']}")
+```
+
+```javascript Node.js
+const res = await fetch("https://SEU-PROJETO.convex.site/api/v1/activations", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer sk_sms_SeuToken",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    serviceId: "jx7m2k9p4n8q",  // WhatsApp
+    country: 73                   // Brasil
+  })
+});
+
+const { data } = await res.json();
+console.log(`Número: ${data.phoneNumber}`);
+console.log(`ID: ${data.activationId}`);
+```
+
+```php PHP
+<?php
+$ch = curl_init("https://SEU-PROJETO.convex.site/api/v1/activations");
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode([
+        "serviceId" => "jx7m2k9p4n8q",
+        "country" => 73
+    ]),
+    CURLOPT_HTTPHEADER => [
+        "Authorization: Bearer sk_sms_SeuToken",
+        "Content-Type: application/json"
+    ]
+]);
+$response = json_decode(curl_exec($ch), true);
+curl_close($ch);
+
+echo "Número: " . $response["data"]["phoneNumber"];
+```
+</RequestExample>
+
+<ResponseExample>
+```json Sucesso (201)
+{
+  "ok": true,
+  "data": {
+    "activationId": "k4p8n2m7q1x3",
+    "providerActivationId": "94827361",
+    "phoneNumber": "+5511987654321",
+    "cost": 2.50,
+    "currency": "BRL"
+  }
+}
+```
+
+```json Erro — Saldo insuficiente (402)
+{
+  "ok": false,
+  "error": {
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Saldo insuficiente. Seu saldo atual é R$ 0,80 mas o número custa R$ 2,50."
+  }
+}
+```
+
+```json Erro — Sem números disponíveis (409)
+{
+  "ok": false,
+  "error": {
+    "code": "NO_NUMBERS_AVAILABLE",
+    "message": "Não há números disponíveis neste país para este serviço no momento. Tente outro país."
+  }
+}
+```
+
+```json Erro — Serviço não encontrado (404)
+{
+  "ok": false,
+  "error": {
+    "code": "SERVICE_NOT_FOUND",
+    "message": "Serviço não encontrado."
+  }
+}
+```
+
+```json Erro — Body inválido (400)
+{
+  "ok": false,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Campos obrigatórios: serviceId (string), country (number)."
+  }
+}
+```
+</ResponseExample>
