@@ -63,7 +63,7 @@ O campo `country` nas ativações aceita o ID numérico do país conforme a oper
 
 <RequestExample>
 ```bash cURL
-curl https://SEU-PROJETO.convex.site/api/v1/services \
+curl https://artful-perch-394.convex.site/api/v1/services \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -71,7 +71,7 @@ curl https://SEU-PROJETO.convex.site/api/v1/services \
 import requests
 
 headers = {"Authorization": "Bearer sk_sms_SeuToken"}
-r = requests.get("https://SEU-PROJETO.convex.site/api/v1/services", headers=headers)
+r = requests.get("https://artful-perch-394.convex.site/api/v1/services", headers=headers)
 
 services = r.json()["data"]
 # Filtrar por nome
@@ -80,7 +80,7 @@ print(f"WhatsApp ID: {whatsapp['id']}, Preço: R$ {whatsapp['priceBrl']:.2f}")
 ```
 
 ```javascript Node.js
-const res = await fetch("https://SEU-PROJETO.convex.site/api/v1/services", {
+const res = await fetch("https://artful-perch-394.convex.site/api/v1/services", {
   headers: { "Authorization": "Bearer sk_sms_SeuToken" }
 });
 const { data: services } = await res.json();

@@ -55,7 +55,7 @@ POST /api/v1/activations/{id}/cancel
 
 <RequestExample>
 ```bash cURL
-curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
+curl -X POST https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -65,7 +65,7 @@ import requests
 headers = {"Authorization": "Bearer sk_sms_SeuToken"}
 
 r = requests.post(
-    "https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
+    "https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
     headers=headers
 )
 print(r.json())
@@ -78,7 +78,7 @@ headers = {
     "Authorization": "Bearer sk_sms_SeuToken",
     "Content-Type": "application/json"
 }
-base = "https://SEU-PROJETO.convex.site"
+base = "https://artful-perch-394.convex.site"
 
 def activate_and_wait(service_id, country, timeout=120):
     """
@@ -116,7 +116,7 @@ print(f"Código: {code}" if code else "Não recebeu, cancelado com estorno")
 
 ```javascript Node.js
 const res = await fetch(
-  "https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
+  "https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel",
   {
     method: "POST",
     headers: { "Authorization": "Bearer sk_sms_SeuToken" }

@@ -15,7 +15,7 @@ Antes de tudo, confirme que você tem saldo suficiente:
 
 <CodeGroup>
 ```bash cURL
-curl https://SEU-PROJETO.convex.site/api/v1/balance \
+curl https://artful-perch-394.convex.site/api/v1/balance \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -23,7 +23,7 @@ curl https://SEU-PROJETO.convex.site/api/v1/balance \
 import requests
 
 headers = {"Authorization": "Bearer sk_sms_SeuToken"}
-r = requests.get("https://SEU-PROJETO.convex.site/api/v1/balance", headers=headers)
+r = requests.get("https://artful-perch-394.convex.site/api/v1/balance", headers=headers)
 print(r.json())
 ```
 </CodeGroup>
@@ -44,7 +44,7 @@ print(r.json())
 Descubra o `id` do serviço que você precisa (ex: WhatsApp):
 
 ```bash
-curl https://SEU-PROJETO.convex.site/api/v1/services \
+curl https://artful-perch-394.convex.site/api/v1/services \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -78,7 +78,7 @@ curl https://SEU-PROJETO.convex.site/api/v1/services \
 Use o `id` do serviço e o código do país (ex: `73` = Brasil):
 
 ```bash
-curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations \
+curl -X POST https://artful-perch-394.convex.site/api/v1/activations \
   -H "Authorization: Bearer sk_sms_SeuToken" \
   -H "Content-Type: application/json" \
   -d '{"serviceId": "jx7m2k9p4n8q", "country": 73}'
@@ -106,7 +106,7 @@ Faça polling no endpoint de status a cada 5 segundos:
 
 <CodeGroup>
 ```bash cURL
-curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
+curl https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3 \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -114,7 +114,7 @@ curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
 import requests, time
 
 headers = {"Authorization": "Bearer sk_sms_SeuToken"}
-base = "https://SEU-PROJETO.convex.site"
+base = "https://artful-perch-394.convex.site"
 activation_id = "k4p8n2m7q1x3"
 
 for _ in range(40):  # Tenta por ~3 minutos
@@ -134,7 +134,7 @@ for _ in range(40):  # Tenta por ~3 minutos
 
 ```javascript Node.js (com polling)
 const headers = { "Authorization": "Bearer sk_sms_SeuToken" };
-const base = "https://SEU-PROJETO.convex.site";
+const base = "https://artful-perch-394.convex.site";
 const activationId = "k4p8n2m7q1x3";
 
 for (let i = 0; i < 40; i++) {
@@ -194,7 +194,7 @@ for (let i = 0; i < 40; i++) {
 Se você não precisar mais do número **antes** do SMS chegar, cancele para receber o estorno:
 
 ```bash
-curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
+curl -X POST https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3/cancel \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -220,7 +220,7 @@ curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3/can
 import requests, time
 
 API_KEY = "sk_sms_SeuToken"
-BASE_URL = "https://SEU-PROJETO.convex.site"
+BASE_URL = "https://artful-perch-394.convex.site"
 
 headers = {
     "Authorization": f"Bearer {API_KEY}",
@@ -265,7 +265,7 @@ else:
 
 ```javascript Node.js (fluxo completo)
 const API_KEY = "sk_sms_SeuToken";
-const BASE_URL = "https://SEU-PROJETO.convex.site";
+const BASE_URL = "https://artful-perch-394.convex.site";
 
 const headers = {
   "Authorization": `Bearer ${API_KEY}`,

@@ -78,7 +78,7 @@ Número máximo de polls: ~240
 
 <RequestExample>
 ```bash cURL
-curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
+curl https://artful-perch-394.convex.site/api/v1/activations/k4p8n2m7q1x3 \
   -H "Authorization: Bearer sk_sms_SeuToken"
 ```
 
@@ -86,7 +86,7 @@ curl https://SEU-PROJETO.convex.site/api/v1/activations/k4p8n2m7q1x3 \
 import requests, time
 
 headers = {"Authorization": "Bearer sk_sms_SeuToken"}
-BASE_URL = "https://SEU-PROJETO.convex.site"
+BASE_URL = "https://artful-perch-394.convex.site"
 
 def wait_for_code(activation_id, timeout_seconds=1200):
     """Aguarda o código SMS com polling de 5s."""
@@ -121,7 +121,7 @@ async function waitForCode(activationId, timeoutMs = 1200000) {
 
   while (Date.now() < deadline) {
     const res = await fetch(
-      `https://SEU-PROJETO.convex.site/api/v1/activations/${activationId}`,
+      `https://artful-perch-394.convex.site/api/v1/activations/${activationId}`,
       { headers }
     );
     const { data } = await res.json();

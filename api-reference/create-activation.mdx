@@ -75,7 +75,7 @@ POST /api/v1/activations
 
 <RequestExample>
 ```bash cURL
-curl -X POST https://SEU-PROJETO.convex.site/api/v1/activations \
+curl -X POST https://artful-perch-394.convex.site/api/v1/activations \
   -H "Authorization: Bearer sk_sms_SeuToken" \
   -H "Content-Type: application/json" \
   -d '{"serviceId": "jx7m2k9p4n8q", "country": 73}'
@@ -90,7 +90,7 @@ headers = {
 }
 
 r = requests.post(
-    "https://SEU-PROJETO.convex.site/api/v1/activations",
+    "https://artful-perch-394.convex.site/api/v1/activations",
     headers=headers,
     json={
         "serviceId": "jx7m2k9p4n8q",  # WhatsApp
@@ -105,7 +105,7 @@ print(f"ID para polling: {data['activationId']}")
 ```
 
 ```javascript Node.js
-const res = await fetch("https://SEU-PROJETO.convex.site/api/v1/activations", {
+const res = await fetch("https://artful-perch-394.convex.site/api/v1/activations", {
   method: "POST",
   headers: {
     "Authorization": "Bearer sk_sms_SeuToken",
@@ -124,7 +124,7 @@ console.log(`ID: ${data.activationId}`);
 
 ```php PHP
 <?php
-$ch = curl_init("https://SEU-PROJETO.convex.site/api/v1/activations");
+$ch = curl_init("https://artful-perch-394.convex.site/api/v1/activations");
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
