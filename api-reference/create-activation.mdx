@@ -47,6 +47,10 @@ POST /api/v1/activations
   Se a operadora não tiver números disponíveis, você receberá um erro `NO_NUMBERS_AVAILABLE` e **nenhum saldo será debitado**.
 </Warning>
 
+<Info>
+  **Proteção de Custos:** Há um limite máximo rígido (Teto de Custo) de **R$ 50,00** por ativação via API Pública. Se o número custar mais que isso na operadora, a requisição será rejeitada preventivamente para proteger o seu saldo.
+</Info>
+
 ## Resposta
 
 <ResponseField name="ok" type="boolean">
